@@ -1,31 +1,287 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F4FAFD"
+    android:keepScreenOn="true"
     android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp">
+    tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/statusText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="等待操作"
-        android:textSize="20sp"
-        android:layout_marginBottom="32dp" />
-
-    <Button
-        android:id="@+id/sendButton"
+    <!-- 顶部状态栏 -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="发送测试值" />
+        android:layout_height="32dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
-    <Button
-        android:id="@+id/stopButton"
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ESP32-S3 遥控器"
+            android:textColor="#607D8B"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <View
+            android:id="@+id/statusDot"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_marginEnd="6dp"
+            android:background="#18A77A" />
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="控制 OFF  |  UDP 等待发送  |  50 Hz"
+            android:textColor="#168F78"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- 中间遥控区域 -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="急停"
-        android:layout_marginTop="20dp" />
+        android:layout_height="0dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_weight="1"
+        android:background="#FFFFFF"
+        android:padding="0dp">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/centerGuide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.5006916" />
+
+        <!-- 左挡位 -->
+        <LinearLayout
+            android:id="@+id/leftGearButton"
+            android:layout_width="70dp"
+            android:layout_height="74dp"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toStartOf="@id/centerGuide"
+            app:layout_constraintHorizontal_bias="0.14"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <Button
+                android:id="@+id/leftGear1Button"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:text="1"
+                android:textColor="#2D414B"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#A9BBC4" />
+
+            <Button
+                android:id="@+id/leftGear2Button"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:text="2"
+                android:textColor="#2D414B"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- 总开关 -->
+        <Button
+            android:id="@+id/powerButton"
+            android:layout_width="76dp"
+            android:layout_height="76dp"
+            android:backgroundTint="#8E9AA3"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:lineSpacingExtra="-2dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="OFF"
+            android:textAlignment="center"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/masterSwitchLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MASTER"
+            android:textColor="#607D8B"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="@id/powerButton"
+            app:layout_constraintStart_toStartOf="@id/powerButton"
+            app:layout_constraintTop_toBottomOf="@id/powerButton" />
+
+        <!-- 右挡位 -->
+        <LinearLayout
+            android:id="@+id/rightGearButton"
+            android:layout_width="70dp"
+            android:layout_height="74dp"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.82"
+            app:layout_constraintStart_toEndOf="@id/centerGuide"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <Button
+                android:id="@+id/rightGear1Button"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:text="1"
+                android:textColor="#2D414B"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#A9BBC4" />
+
+            <Button
+                android:id="@+id/rightGear2Button"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:text="2"
+                android:textColor="#2D414B"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- 左摇杆 -->
+        <com.example.a1027esp32rx.JoystickView
+            android:id="@+id/leftJoystick"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:contentDescription="左摇杆"
+            app:layout_constraintBottom_toTopOf="@id/leftCoordinates"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toStartOf="@id/centerGuide"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/leftGearButton" />
+
+        <!-- 右摇杆 -->
+        <com.example.a1027esp32rx.JoystickView
+            android:id="@+id/rightJoystick"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:contentDescription="右摇杆"
+            app:layout_constraintBottom_toTopOf="@id/rightCoordinates"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/centerGuide"
+            app:layout_constraintTop_toBottomOf="@id/rightGearButton" />
+
+        <!-- 左坐标 -->
+        <TextView
+            android:id="@+id/leftCoordinates"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:text="左摇杆 X +000 Y +000"
+            android:textColor="#607D8B"
+            android:textSize="11sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/centerGuide"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- 右坐标 -->
+        <TextView
+            android:id="@+id/rightCoordinates"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:text="右摇杆 X +000 Y +000"
+            android:textColor="#607D8B"
+            android:textSize="11sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/centerGuide" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 底部信息栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="14dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <TextView
+            android:id="@+id/outputText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="monospace"
+            android:text="CAN ID 0x123  |  8 Bytes"
+            android:textColor="#718792"
+            android:textSize="9sp" />
+
+        <TextView
+            android:id="@+id/rateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="50 Hz"
+            android:textColor="#18A77A"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
 
 </LinearLayout>

@@ -3,73 +3,75 @@ package com.example.a1027esp32rx
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-
-data class ControlState(
-    val steer: Int = 0,
-    val throttle: Int = 0,
-    val buttons: Int = 0,
-    val mode: Int = 0
-)
 
 class UdpSender(
     private val ip: String = "192.168.4.1",
-    private val port: Int = 8888
+    private val port: Int = 8888,
+    private val periodMs: Long = 20L,
+    private val onStatusChanged: (String) -> Unit = {}
 ) {
-    private val executor = Executors.newSingleThreadScheduledExecutor()
-    private val state = AtomicReference(ControlState())
-
+    private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     private var socket: DatagramSocket? = null
-    private lateinit var address: InetAddress
-    private var sequence = 0
+    private var address: InetAddress? = null
+    private var payloadProvider: (() -> ByteArray)? = null
+    private var started = false
+    private var lastSuccessReportMs = 0L
 
+    @Synchronized
     fun start() {
-        address = InetAddress.getByName(ip)
-        socket = DatagramSocket()
+        if (started) return
+        started = true
+        try {
+            address = InetAddress.getByName(ip)
+            socket = DatagramSocket()
+            onStatusChanged("UDP已启动（目标 $ip:$port）")
+        } catch (e: Exception) {
+            onStatusChanged("发送失败：${e.message ?: e.javaClass.simpleName}")
+        }
+        executor.scheduleAtFixedRate({ sendOnce() }, 0L, periodMs, TimeUnit.MILLISECONDS)
+    }
 
-        executor.scheduleAtFixedRate({
-            try {
-                val s = state.get()
+    fun setPayloadProvider(provider: () -> ByteArray) {
+        payloadProvider = provider
+    }
 
-                val data = ByteBuffer.allocate(8)
-                    .order(ByteOrder.LITTLE_ENDIAN)
-                    .putShort(s.steer.coerceIn(-32768, 32767).toShort())
-                    .putShort(s.throttle.coerceIn(-32768, 32767).toShort())
-                    .putShort(s.buttons.coerceIn(0, 65535).toShort())
-                    .put(s.mode.coerceIn(0, 255).toByte())
-                    .put((sequence and 0xFF).toByte())
-                    .array()
-
-                val packet = DatagramPacket(
-                    data,
-                    data.size,
-                    address,
-                    port
-                )
-
-                socket?.send(packet)
-                sequence = (sequence + 1) and 0xFF
-            } catch (e: Exception) {
-                e.printStackTrace()
+    private fun sendOnce() {
+        val currentSocket = socket ?: return
+        val currentAddress = address ?: return
+        val provider = payloadProvider ?: return
+        try {
+            val data = provider()
+            currentSocket.send(DatagramPacket(data, data.size, currentAddress, port))
+            val now = System.currentTimeMillis()
+            if (now - lastSuccessReportMs >= 1000L) {
+                lastSuccessReportMs = now
+                onStatusChanged("已发出（UDP无回执，未确认ESP在线）")
             }
-        }, 0, 20, TimeUnit.MILLISECONDS)
+        } catch (e: Exception) {
+            onStatusChanged("发送失败：${e.message ?: e.javaClass.simpleName}")
+        }
     }
 
-    fun setControl(
-        steer: Int,
-        throttle: Int,
-        buttons: Int,
-        mode: Int
-    ) {
-        state.set(ControlState(steer, throttle, buttons, mode))
+    /** Kept for compatibility with the earlier test page. */
+    fun setControl(steer: Int, throttle: Int, buttons: Int, mode: Int) {
+        payloadProvider = {
+            byteArrayOf(
+                steer.coerceIn(-128, 127).toByte(),
+                throttle.coerceIn(-128, 127).toByte(),
+                (buttons and 0xFF).toByte(),
+                (mode and 0xFF).toByte()
+            )
+        }
     }
 
+    @Synchronized
     fun close() {
+        started = false
         socket?.close()
+        socket = null
         executor.shutdownNow()
     }
 }
