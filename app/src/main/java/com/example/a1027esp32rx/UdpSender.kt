@@ -48,7 +48,7 @@ class UdpSender(
             val now = System.currentTimeMillis()
             if (now - lastSuccessReportMs >= 1000L) {
                 lastSuccessReportMs = now
-                onStatusChanged("已发出（UDP无回执，未确认ESP在线）")
+                onStatusChanged("UDP发送正常")
             }
         } catch (e: Exception) {
             onStatusChanged("发送失败：${e.message ?: e.javaClass.simpleName}")
